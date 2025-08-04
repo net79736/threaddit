@@ -46,9 +46,287 @@ On the front end, the project leverages a stack of essential technologies and li
 
 ## Database
 
-The project's backend relies on PostgreSQL, a robust and open-source relational database system, to effectively handle data storage and management. Details about the schema, views, and relationships can be found in the backend folder as an SQL file; the schema is shown below.
+The project's backend relies on PostgreSQL, a robust and open-source relational database system, to effectively handle data storage and management. The database schema has been enhanced to support hierarchical category structures for better organization of subthreads.
 
-![Schema](https://github.com/StarKhan6368/threaddit/assets/77010375/8e60b685-e3a1-4a72-b219-61399fec79a5)
+### Enhanced Schema for Hierarchical Categories
+
+The database schema has been enhanced to support Reddit-like hierarchical category structures with separate topics and communities:
+
+```sql
+-- Topics table for main categories (hierarchical structure)
+CREATE TABLE topics (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    parent_id INTEGER REFERENCES topics(id),
+    display_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Enhanced communities table (flat structure)
+ALTER TABLE subthreads RENAME TO communities;
+ALTER TABLE communities ADD COLUMN topic_id INTEGER REFERENCES topics(id);
+ALTER TABLE communities ADD COLUMN display_order INTEGER DEFAULT 0;
+```
+
+### ERD (Entity-Relationship Diagram)
+
+#### Database Schema Overview
+
+```mermaid
+erDiagram
+    topics {
+        integer id PK
+        varchar name UK
+        text description
+        integer parent_id FK
+        integer display_order
+        boolean is_active
+        timestamp created_at
+    }
+    
+    communities {
+        integer id PK
+        varchar name UK
+        text description
+        integer topic_id FK
+        integer display_order
+        text logo
+        integer created_by FK
+        timestamp created_at
+    }
+    
+    users {
+        integer id PK
+        text username UK
+        text password_hash
+        text email UK
+        text avatar
+        text bio
+        timestamp registration_date
+    }
+    
+    posts {
+        integer id PK
+        integer user_id FK
+        integer community_id FK
+        text title
+        text media
+        text content
+        timestamp created_at
+        boolean is_edited
+    }
+    
+    comments {
+        integer id PK
+        integer user_id FK
+        integer post_id FK
+        integer parent_id FK
+        boolean has_parent
+        text content
+        timestamp created_at
+        boolean is_edited
+    }
+    
+    reactions {
+        integer id PK
+        integer user_id FK
+        integer post_id FK
+        integer comment_id FK
+        boolean is_upvote
+        timestamp created_at
+    }
+    
+    subscriptions {
+        integer id PK
+        integer user_id FK
+        integer community_id FK
+        timestamp created_at
+    }
+    
+    saved {
+        integer id PK
+        integer user_id FK
+        integer post_id FK
+        timestamp created_at
+    }
+    
+    messages {
+        integer id PK
+        integer sender_id FK
+        integer receiver_id FK
+        text content
+        timestamp created_at
+        boolean seen
+        timestamp seen_at
+    }
+    
+    roles {
+        integer id PK
+        text name
+        text slug UK
+    }
+    
+    user_roles {
+        integer id PK
+        integer user_id FK
+        integer role_id FK
+        integer community_id FK
+        timestamp created_at
+    }
+    
+    %% Relationships
+    topics ||--o{ communities : "contains"
+    topics ||--o{ topics : "parent_child"
+    
+    users ||--o{ posts : "creates"
+    users ||--o{ comments : "writes"
+    users ||--o{ reactions : "votes"
+    users ||--o{ subscriptions : "subscribes"
+    users ||--o{ saved : "saves"
+    users ||--o{ messages : "sends"
+    users ||--o{ messages : "receives"
+    users ||--o{ user_roles : "has"
+    
+    communities ||--o{ posts : "contains"
+    communities ||--o{ subscriptions : "subscribed_by"
+    communities ||--o{ user_roles : "moderated_by"
+    
+    posts ||--o{ comments : "has"
+    posts ||--o{ reactions : "receives"
+    posts ||--o{ saved : "saved_by"
+    
+    comments ||--o{ comments : "replies_to"
+    comments ||--o{ reactions : "receives"
+    
+    roles ||--o{ user_roles : "assigned_to"
+```
+
+#### Hierarchical Category Structure
+
+```mermaid
+graph TD
+    A[Topics] --> B[Technology]
+    A --> C[Games]
+    A --> D[Entertainment]
+    A --> E[Lifestyle]
+    
+    B --> B1[react]
+    B --> B2[javascript]
+    B --> B3[python]
+    B --> B4[webdev]
+    B --> B5[programming]
+    
+    C --> C1[gaming]
+    C --> C2[minecraft]
+    C --> C3[valorant]
+    C --> C4[leagueoflegends]
+    
+    D --> D1[movies]
+    D --> D2[tvshows]
+    D --> D3[anime]
+    
+    E --> E1[fitness]
+    E --> E2[cooking]
+    E --> E3[travel]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#f3e5f5
+    style D fill:#f3e5f5
+    style E fill:#f3e5f5
+```
+
+#### Enhanced Communities Table Structure
+
+```mermaid
+classDiagram
+    class Topic {
+        +integer id
+        +varchar name
+        +text description
+        +integer parent_id
+        +integer display_order
+        +boolean is_active
+        +timestamp created_at
+        +getCommunities()
+        +getParent()
+        +getChildren()
+        +isRoot()
+        +getDepth()
+        +addCommunity()
+        +removeCommunity()
+        +getCommunityCount()
+    }
+    
+    class Community {
+        +integer id
+        +varchar name
+        +text description
+        +integer topic_id
+        +integer display_order
+        +text logo
+        +integer created_by
+        +timestamp created_at
+        +getTopic()
+        +getSubscriberCount()
+        +getPostCount()
+    }
+    
+    Topic --> Community : contains
+    Topic --> Topic : parent_of
+```
+
+### Schema Structure
+
+- **topics**: Main categories for organizing communities (hierarchical structure)
+  - `id`: Primary key
+  - `name`: Topic name (e.g., "Technology", "Games", "Entertainment")
+  - `description`: Topic description
+  - `parent_id`: For nested topics (optional)
+  - `display_order`: For custom ordering
+  - `is_active`: Boolean flag for active topics
+  - `created_at`: Creation timestamp
+
+- **communities**: Main table for communities/threads (flat structure)
+  - `id`: Primary key
+  - `name`: Community name (e.g., "react", "javascript")
+  - `description`: Community description
+  - `topic_id`: Reference to topics table
+  - `display_order`: For custom ordering within topics
+  - `logo`: Community logo/icon
+  - `created_by`: Reference to users table
+  - `created_at`: Creation timestamp
+
+### Category Examples
+
+```
+Technology
+├── react
+├── javascript
+├── python
+├── webdev
+└── programming
+
+Games
+├── gaming
+├── minecraft
+├── valorant
+└── leagueoflegends
+
+Entertainment
+├── movies
+├── tvshows
+└── anime
+
+Lifestyle
+├── fitness
+├── cooking
+└── travel
+```
+
+Details about the complete schema, views, and relationships can be found in the backend folder as an SQL file.
 
 # Features
 
