@@ -47,7 +47,9 @@ export function ThreadsSidebar() {
   const [expandedCategories, setExpandedCategories] = useState({
     subscribed: true,
     all: true,
-    popular: true
+    popular: true,
+    communities: true,
+    topics: true
   });
 
   // 실제 API 호출 대신 더미 데이터 사용
@@ -80,6 +82,24 @@ export function ThreadsSidebar() {
 
   return (
     <aside className="hidden flex-col w-56 md:flex">
+      {/* Main Navigation */}
+      <div className="flex flex-col m-5 space-y-4">
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+          <span className="text-lg">🏠</span>
+          <span className="font-semibold">Home</span>
+        </div>
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+          <span className="text-lg">📈</span>
+          <span>Popular</span>
+        </div>
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+          <span className="text-lg">📊</span>
+          <span>All</span>
+        </div>
+      </div>
+
+      <span className="mx-5 border border-theme-silver-chalice"></span>
+
       {data?.subscribed.length !== 0 && (
         <>
           <div className="flex flex-col m-5 space-y-4">
@@ -97,6 +117,8 @@ export function ThreadsSidebar() {
           <span className="mx-5 border border-theme-silver-chalice"></span>
         </>
       )}
+
+      {/* All Threads */}
       <div className="flex flex-col m-5 space-y-4">
         <div 
           className="flex justify-between w-48 cursor-pointer"
@@ -109,18 +131,48 @@ export function ThreadsSidebar() {
           <HierarchicalThreadList threadList={data?.all} />
         )}
       </div>
+
       <span className="mx-5 border border-theme-silver-chalice"></span>
+
+      {/* Resources */}
       <div className="flex flex-col m-5 space-y-4">
         <div 
           className="flex justify-between w-48 cursor-pointer"
-          onClick={() => toggleCategory('popular')}
+          onClick={() => toggleCategory('resources')}
         >
-          <h2 className="font-semibold uppercase">Popular Threads</h2>
-          <span className="pr-1">{expandedCategories.popular ? '▼' : '▶'}</span>
+          <h2 className="font-semibold uppercase text-gray-600">Resources</h2>
+          <span className="pr-1">{expandedCategories.resources ? '▼' : '▶'}</span>
         </div>
-        {expandedCategories.popular && (
-          <HierarchicalThreadList threadList={data?.popular} />
+        {expandedCategories.resources && (
+          <>
+            <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+              <span className="text-lg">ℹ️</span>
+              <span>About Threaddit</span>
+            </div>
+            <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+              <span className="text-lg">📢</span>
+              <span>Advertise</span>
+            </div>
+            <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+              <span className="text-lg">❓</span>
+              <span>Help</span>
+            </div>
+          </>
         )}
+      </div>
+
+      <span className="mx-5 border border-theme-silver-chalice"></span>
+
+      {/* Bottom Navigation */}
+      <div className="flex flex-col m-5 space-y-4">
+        <Link to="/communities" className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+          <span className="text-lg">🏘️</span>
+          <span className="font-semibold">Communities</span>
+        </Link>
+        <Link to="/topics" className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+          <span className="text-lg">📋</span>
+          <span className="font-semibold">Topics</span>
+        </Link>
       </div>
     </aside>
   );

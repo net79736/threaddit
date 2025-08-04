@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Suspense, lazy } from "react";
 import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
 import AppLayout from "./components/AppLayout.jsx";
@@ -17,6 +17,8 @@ const FullPost = lazy(() => import("./pages/fullPost/FullPost.jsx"));
 const Inbox = lazy(() => import("./pages/inbox/Inbox.jsx"));
 const SavedPosts = lazy(() => import("./pages/saved/SavedPosts.jsx"));
 const SubThread = lazy(() => import("./pages/thread/SubThread.jsx"));
+const Communities = lazy(() => import("./pages/communities/Communities.jsx"));
+const Topics = lazy(() => import("./pages/topics/Topics.jsx"));
 
 const router = createBrowserRouter([
   {
@@ -65,6 +67,14 @@ const router = createBrowserRouter([
             <Inbox />
           </RequireAuth>
         ),
+      },
+      {
+        path: "/communities",
+        element: <Communities />,
+      },
+      {
+        path: "/topics",
+        element: <Topics />,
       },
     ],
   },
